@@ -1,0 +1,5 @@
+sensors:
+  - /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp*_input
+  #- /sys/devices/virtual/thermal/thermal_zone*/hwmon*/temp1_input
+fan: /proc/acpi/ibm/fan
+buffersize: 7
