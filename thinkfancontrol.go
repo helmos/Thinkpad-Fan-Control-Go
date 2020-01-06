@@ -23,10 +23,10 @@ type Config struct {
 	Mapping      []string `yaml:"mapping"`
 	DefaultState string   `yaml:"defaultstate"`
 	BufferSize   int      `yaml:"buffersize"`
-	Database     struct {
-		Username string `yaml:"user"`
-		Password string `yaml:"pass"`
-	} `yaml:"database"`
+	Matrix       []struct {
+		Temp  int `yaml:"temp"`
+		Level int `yaml:"level"`
+	} `yaml:"matrix"`
 }
 
 // FanObj - fan data struct
@@ -47,6 +47,27 @@ func checkProcessError(err error, exitcode int) {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(exitcode)
+	}
+}
+
+//
+func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
+	var level int
+	for _, currentMatrix := range cfg.Matrix {
+		if currentMatrix.Temp != -1 {
+			if tempReading >= currentMatrix.Temp {
+				level = currentMatrix.Level
+
+			}
+		}
+	}
+	levelReading, _ := strconv.Atoi(fan.Level)
+	if level != levelReading {
+		log.Println("level " + strconv.Itoa(level))
+		data := []byte("level " + strconv.Itoa(level))
+		err := ioutil.WriteFile(cfg.Fan, data, 0644)
+		checkProcessError(err, 8)
+		log.Println("Setting fan level: " + strconv.Itoa(level))
 	}
 }
 
@@ -71,22 +92,26 @@ func readFanStatus(FanObj *FanObj, fanPath string) {
 
 func main() {
 
+	var cfg Config
+	var fan FanObj
+	var sensorsList []string
+
+	readFile(&cfg)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for sig := range c {
 			// sig is a ^C, handle it
 			log.Println(sig)
+			log.Println("Setting fan to auto")
+			d1 := []byte("level auto")
+			err := ioutil.WriteFile(cfg.Fan, d1, 0644)
+			checkProcessError(err, 8)
 			log.Println("exiting...")
 			os.Exit(0)
 		}
 	}()
-
-	var cfg Config
-	var fan FanObj
-	var sensorsList []string
-
-	readFile(&cfg)
 
 	if cfg.BufferSize == 0 {
 		cfg.BufferSize = 10
@@ -129,17 +154,23 @@ func main() {
 				sensorReadingIntAvg = sensorReadingIntAvg + x.(int)
 			}
 		})
+		tempReading := sensorReadingIntAvg / bufferSize
 		log.Println(strconv.Itoa(sensorReadingIntAvg / bufferSize))
 		// fmt.Println(ringBuffer.Len())
 		if bufferSize == cfg.BufferSize {
 			log.Println("Buffer ready")
 		} else {
-			log.Println("Buffer loading")
+			log.Println("Buffer filling")
 		}
 		readFanStatus(&fan, cfg.Fan)
 		log.Println(fan.Level)
 		log.Println(fan.Speed)
 		log.Println(fan.Status)
+
+		// d1 := []byte("level " + )
+		// err := ioutil.WriteFile(cfg.Fan, d1, 0644)
+		// checkProcessError(err, 8)
+		setFanLevel(&cfg, &fan, tempReading)
 
 		time.Sleep(1 * time.Second)
 	}
