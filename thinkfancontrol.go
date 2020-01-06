@@ -57,7 +57,6 @@ func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
 		if currentMatrix.Temp != -1 {
 			if tempReading >= currentMatrix.Temp {
 				level = currentMatrix.Level
-
 			}
 		}
 	}
@@ -136,27 +135,20 @@ func main() {
 				i = i / 1000
 				sensorReadingsInt = append(sensorReadingsInt, i)
 
-				//log.Println(strconv.Itoa(i))
 			}
 		}
 		maxSensorReading := MaxIntSlice(sensorReadingsInt)
-		// log.Println("-----------------------------")
-		// log.Println(strconv.Itoa(maxSensorReading))
-		// log.Println("-----------------------------")
 		ringBuffer.Value = maxSensorReading
 		ringBuffer = ringBuffer.Next()
-
 		var bufferSize int
 		ringBuffer.Do(func(x interface{}) {
 			if x != nil {
 				bufferSize++
-				//fmt.Println(x)
 				sensorReadingIntAvg = sensorReadingIntAvg + x.(int)
 			}
 		})
 		tempReading := sensorReadingIntAvg / bufferSize
 		log.Println(strconv.Itoa(sensorReadingIntAvg / bufferSize))
-		// fmt.Println(ringBuffer.Len())
 		if bufferSize == cfg.BufferSize {
 			log.Println("Buffer ready")
 		} else {
@@ -167,9 +159,6 @@ func main() {
 		log.Println(fan.Speed)
 		log.Println(fan.Status)
 
-		// d1 := []byte("level " + )
-		// err := ioutil.WriteFile(cfg.Fan, d1, 0644)
-		// checkProcessError(err, 8)
 		setFanLevel(&cfg, &fan, tempReading)
 
 		time.Sleep(1 * time.Second)
