@@ -62,11 +62,7 @@ func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
 	}
 	levelReading, _ := strconv.Atoi(fan.Level)
 	if level != levelReading {
-		log.Println("level " + strconv.Itoa(level))
-		data := []byte("level " + strconv.Itoa(level))
-		err := ioutil.WriteFile(cfg.Fan, data, 0644)
-		checkProcessError(err, 8)
-		log.Println("Setting fan level: " + strconv.Itoa(level))
+		writeFan(cfg, level, 8)
 	}
 }
 
@@ -89,6 +85,20 @@ func readFanStatus(FanObj *FanObj, fanPath string) {
 	checkProcessError(err, 6)
 }
 
+func writeFan(cfg *Config, level int, errorCode int) {
+	levelString := strconv.Itoa(level)
+	d1 := []byte("")
+	if level == -1 {
+		log.Println("Setting fan level: auto")
+		d1 = []byte("level auto")
+	} else {
+		log.Println("Setting fan level: " + levelString)
+		d1 = []byte("level " + levelString)
+	}
+	err := ioutil.WriteFile(cfg.Fan, d1, 0644)
+	checkProcessError(err, errorCode)
+}
+
 func main() {
 
 	var cfg Config
@@ -103,14 +113,13 @@ func main() {
 		for sig := range c {
 			// sig is a ^C, handle it
 			log.Println(sig)
-			log.Println("Setting fan to auto")
-			d1 := []byte("level auto")
-			err := ioutil.WriteFile(cfg.Fan, d1, 0644)
-			checkProcessError(err, 8)
+			writeFan(&cfg, -1, 8)
 			log.Println("exiting...")
 			os.Exit(0)
 		}
 	}()
+
+	writeFan(&cfg, 0, 9)
 
 	if cfg.BufferSize == 0 {
 		cfg.BufferSize = 10
