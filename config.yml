@@ -2,21 +2,21 @@ sensors:
   - /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp*_input
   #- /sys/devices/virtual/thermal/thermal_zone*/hwmon*/temp1_input
 fan: /proc/acpi/ibm/fan
-buffersize: 7
+buffersize: 10
 matrix:
   - temp: 0
     level: 0
-  - temp: 55
-    level: 1
-  - temp: 57
-    level: 2
   - temp: 60
-    level: 3
+    level: 1
   - temp: 62
-    level: 4
+    level: 2
   - temp: 65
-    level: 5
+    level: 3
+  - temp: 67
+    level: 4
   - temp: 70
-    level: 6
+    level: 5
   - temp: 75
+    level: 6
+  - temp: 80
     level: 7

@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -64,11 +65,13 @@ func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
 	if level != levelReading {
 		writeFan(cfg, level, 8)
 	}
+	err := ioutil.WriteFile(cfg.Fan, []byte("watchdog 3"), 0644)
+	checkProcessError(err, 13)
 }
 
 // readFile function exports configuration taken from config.yml to a Config structure
 func readFile(cfg *Config) {
-	f, err := os.Open("config.yml")
+	f, err := os.Open("/etc/thinkfancontrol/config.yml")
 	checkProcessError(err, 2)
 	defer f.Close()
 	decoder := yaml.NewDecoder(f)
@@ -108,10 +111,9 @@ func main() {
 	readFile(&cfg)
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
 	go func() {
 		for sig := range c {
-			// sig is a ^C, handle it
 			log.Println(sig)
 			writeFan(&cfg, -1, 8)
 			log.Println("exiting...")
@@ -157,16 +159,7 @@ func main() {
 			}
 		})
 		tempReading := sensorReadingIntAvg / bufferSize
-		log.Println(strconv.Itoa(sensorReadingIntAvg / bufferSize))
-		if bufferSize == cfg.BufferSize {
-			log.Println("Buffer ready")
-		} else {
-			log.Println("Buffer filling")
-		}
 		readFanStatus(&fan, cfg.Fan)
-		log.Println(fan.Level)
-		log.Println(fan.Speed)
-		log.Println(fan.Status)
 
 		setFanLevel(&cfg, &fan, tempReading)
 
