@@ -25,8 +25,9 @@ type Config struct {
 	DefaultState string   `yaml:"defaultstate"`
 	BufferSize   int      `yaml:"buffersize"`
 	Matrix       []struct {
-		Temp  int `yaml:"temp"`
-		Level int `yaml:"level"`
+		Temp       int `yaml:"temp"`
+		Hysteresis int `yaml:"hysteresis"`
+		Level      int `yaml:"level"`
 	} `yaml:"matrix"`
 }
 
@@ -36,6 +37,8 @@ type FanObj struct {
 	Speed  string `yaml:"speed"`
 	Status string `yaml:"status"`
 }
+
+var hysteresis int = 0
 
 // MaxIntSlice function returns Max int from the specified Int slice
 func MaxIntSlice(v []int) int {
@@ -56,7 +59,8 @@ func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
 	var level int
 	for _, currentMatrix := range cfg.Matrix {
 		if currentMatrix.Temp != -1 {
-			if tempReading >= currentMatrix.Temp {
+			if tempReading >= currentMatrix.Temp || (tempReading >= hysteresis && currentMatrix.Hysteresis == hysteresis) {
+				hysteresis = currentMatrix.Hysteresis
 				level = currentMatrix.Level
 			}
 		}
