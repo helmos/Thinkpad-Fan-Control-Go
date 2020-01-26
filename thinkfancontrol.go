@@ -168,8 +168,6 @@ func main() {
 
 		setFanLevel(&cfg, &fan, tempReading)
 
-		log.Println(hysteresis)
-
 		time.Sleep(1 * time.Second)
 	}
 	select {}
