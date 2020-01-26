@@ -56,17 +56,18 @@ func checkProcessError(err error, exitcode int) {
 
 //
 func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
-	var level int
+	var level, tempHysteresis int
 	for _, currentMatrix := range cfg.Matrix {
 		if currentMatrix.Temp != -1 {
 			if tempReading >= currentMatrix.Temp || (tempReading >= hysteresis && currentMatrix.Hysteresis == hysteresis) {
-				hysteresis = currentMatrix.Hysteresis
+				tempHysteresis = currentMatrix.Hysteresis
 				level = currentMatrix.Level
 			}
 		}
 	}
 	levelReading, _ := strconv.Atoi(fan.Level)
 	if level != levelReading {
+		hysteresis = tempHysteresis
 		writeFan(cfg, level, 8)
 	}
 	err := ioutil.WriteFile(cfg.Fan, []byte("watchdog 3"), 0644)
@@ -166,6 +167,8 @@ func main() {
 		readFanStatus(&fan, cfg.Fan)
 
 		setFanLevel(&cfg, &fan, tempReading)
+
+		log.Println(hysteresis)
 
 		time.Sleep(1 * time.Second)
 	}

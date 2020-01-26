@@ -9,7 +9,7 @@ matrix:
     hysteresis: 0
   - temp: 61
     level: 1
-    hysteresis: 50
+    hysteresis: 56
   - temp: 62
     level: 2
     hysteresis: 60
