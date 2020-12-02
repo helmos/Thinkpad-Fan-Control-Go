@@ -68,8 +68,8 @@ func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
 	levelReading, _ := strconv.Atoi(fan.Level)
 	if level != levelReading {
 		hysteresis = tempHysteresis
-		writeFan(cfg, level, 8)
 	}
+	writeFan(cfg, level, 8)
 	err := ioutil.WriteFile(cfg.Fan, []byte("watchdog 3"), 0644)
 	checkProcessError(err, 13)
 }
