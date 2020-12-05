@@ -68,6 +68,8 @@ func setFanLevel(cfg *Config, fan *FanObj, tempReading int) {
 	levelReading, _ := strconv.Atoi(fan.Level)
 	if level != levelReading {
 		hysteresis = tempHysteresis
+		levelString := strconv.Itoa(level)
+		log.Println("Setting fan level: " + levelString)
 	}
 	writeFan(cfg, level, 8)
 	err := ioutil.WriteFile(cfg.Fan, []byte("watchdog 3"), 0644)
@@ -97,10 +99,10 @@ func writeFan(cfg *Config, level int, errorCode int) {
 	levelString := strconv.Itoa(level)
 	d1 := []byte("")
 	if level == -1 {
-		log.Println("Setting fan level: auto")
+		//log.Println("Setting fan level: auto")
 		d1 = []byte("level auto")
 	} else {
-		log.Println("Setting fan level: " + levelString)
+		//log.Println("Setting fan level: " + levelString)
 		d1 = []byte("level " + levelString)
 	}
 	err := ioutil.WriteFile(cfg.Fan, d1, 0644)
@@ -120,6 +122,8 @@ func main() {
 	go func() {
 		for sig := range c {
 			log.Println(sig)
+			err := ioutil.WriteFile(cfg.Fan, []byte("disabled"), 0644)
+			checkProcessError(err, 13)
 			writeFan(&cfg, -1, 8)
 			log.Println("exiting...")
 			os.Exit(0)
