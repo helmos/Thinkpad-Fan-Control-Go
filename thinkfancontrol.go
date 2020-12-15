@@ -123,8 +123,10 @@ func main() {
 		for sig := range c {
 			log.Println(sig)
 			err := ioutil.WriteFile(cfg.Fan, []byte("disabled"), 0644)
-			checkProcessError(err, 13)
+			checkProcessError(err, 14)
 			writeFan(&cfg, -1, 8)
+			err = ioutil.WriteFile(cfg.Fan, []byte("watchdog 0"), 0644)
+			checkProcessError(err, 15)
 			log.Println("exiting...")
 			os.Exit(0)
 		}
